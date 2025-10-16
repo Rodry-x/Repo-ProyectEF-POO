@@ -27,5 +27,4 @@ public class PanelVerProfesoresController {
     void setVerProfesorIniciar(ActionEvent event) {
 
     }
-
 }

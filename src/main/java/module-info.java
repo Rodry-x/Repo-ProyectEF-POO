@@ -11,6 +11,7 @@ module org.example.libreriavirtual {
     requires eu.hansolo.tilesfx;
     requires com.almasb.fxgl.all;
     requires javafx.graphics;
+    requires java.sql;
 
     exports org.example.libreriavirtual.application;
     opens org.example.libreriavirtual.application to javafx.fxml;

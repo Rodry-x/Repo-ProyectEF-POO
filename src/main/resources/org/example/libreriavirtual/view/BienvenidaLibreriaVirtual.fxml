@@ -21,16 +21,11 @@
             <Font name="Comic Sans MS Bold" size="27.0" />
          </font>
       </Label>
-      <ImageView fitHeight="279.0" fitWidth="265.0" layoutX="83.0" layoutY="156.0" pickOnBounds="true" preserveRatio="true">
+      <ImageView fitHeight="279.0" fitWidth="265.0" layoutX="85.0" layoutY="140.0" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../image/iconosLibrosApiladosMinimalista.png" />
          </image></ImageView>
-      <Button layoutX="250.0" layoutY="461.0" mnemonicParsing="false" onAction="#cambiarAEstanteria" prefHeight="38.0" prefWidth="141.0" text="ingresar Demo">
-         <font>
-            <Font size="15.0" />
-         </font>
-      </Button>
-      <Button layoutX="17.0" layoutY="442.0" mnemonicParsing="false" onAction="#cambiarAPanelLoginAdmin" prefHeight="38.0" prefWidth="194.0" text="Iniciar Sesión profesor" />
-      <Button layoutX="17.0" layoutY="489.0" mnemonicParsing="false" onAction="#cambiarAlPanelLoginEstudiante" prefHeight="38.0" prefWidth="194.0" text="Iniciar Sesión Alumno" />
+      <Button layoutX="108.0" layoutY="435.0" mnemonicParsing="false" onAction="#cambiarAPanelLoginAdmin" prefHeight="38.0" prefWidth="194.0" text="Iniciar Sesión profesor" />
+      <Button layoutX="108.0" layoutY="482.0" mnemonicParsing="false" onAction="#cambiarAlPanelLoginEstudiante" prefHeight="38.0" prefWidth="194.0" text="Iniciar Sesión Alumno" />
    </children>
 </AnchorPane>
