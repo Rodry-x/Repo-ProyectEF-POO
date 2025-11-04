@@ -12,9 +12,11 @@ module org.example.libreriavirtual {
     requires com.almasb.fxgl.all;
     requires javafx.graphics;
     requires java.sql;
+    requires okhttp3;
 
     exports org.example.libreriavirtual.application;
     opens org.example.libreriavirtual.application to javafx.fxml;
     exports org.example.libreriavirtual.controller;
     opens org.example.libreriavirtual.controller to javafx.fxml;
+
 }
