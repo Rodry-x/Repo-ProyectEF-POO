@@ -17,6 +17,7 @@ module org.example.libreriavirtual {
 
     exports org.example.libreriavirtual.application;
     opens org.example.libreriavirtual.application to javafx.fxml;
+
     exports org.example.libreriavirtual.controller;
     opens org.example.libreriavirtual.controller to javafx.fxml;
 

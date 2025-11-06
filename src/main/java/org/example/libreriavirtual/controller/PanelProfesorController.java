@@ -3,13 +3,20 @@ package org.example.libreriavirtual.controller;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.input.MouseEvent;
-import org.example.libreriavirtual.database.SesionController;
+import org.example.libreriavirtual.utilities.SesionController;
 import org.example.libreriavirtual.utilities.MostrarAlerta;
 import org.example.libreriavirtual.utilities.Path;
 import org.example.libreriavirtual.utilities.SceneController;
 
 public class PanelProfesorController {
+
     SceneController sceneController = new SceneController();
+
+    @FXML
+    public void initialize() {
+        // Cargar sesión persistida al inicializar el controlador JavaFX
+        SesionController.cargarSesionPersistida();
+    }
 
     @FXML
     void cambiarAPanelAulaVirtual(MouseEvent event) {

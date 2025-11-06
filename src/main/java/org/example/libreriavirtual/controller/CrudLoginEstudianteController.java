@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
+import org.example.libreriavirtual.utilities.SesionController;
 import org.example.libreriavirtual.model.PostLogin;
 import org.example.libreriavirtual.model.User;
 import org.example.libreriavirtual.service.ApiClient;
@@ -50,8 +51,10 @@ public class CrudLoginEstudianteController {
                 JsonObject responseObject = gson.fromJson(responseBody, JsonObject.class);
                 User user = gson.fromJson(responseObject.get("user").toString(), User.class);
 
+                // Iniciar sesión guardando el usuario actual
+                SesionController.iniciarSesion(user);
                 // Mostrar una alerta de éxito
-                MostrarAlerta.info("Inicio de sesión exitoso", "¡Bienvenido!" + user.getFull_name());
+                MostrarAlerta.info("Inicio de sesión exitoso", "¡Bienvenido/a " + user.getFull_name() + "!");
 
                 // Cambiar a la escena del panel principal
                 sceneController.cambiarEscena(event, Path.PANEL_PROFESOR_FXML);

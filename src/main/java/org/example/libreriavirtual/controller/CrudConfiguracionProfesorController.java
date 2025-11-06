@@ -3,7 +3,7 @@ package org.example.libreriavirtual.controller;
 import javafx.fxml.FXML;
 import javafx.event.ActionEvent;
 import javafx.scene.input.MouseEvent;
-import org.example.libreriavirtual.database.SesionController;
+import org.example.libreriavirtual.utilities.SesionController;
 import org.example.libreriavirtual.utilities.MostrarAlerta;
 import org.example.libreriavirtual.utilities.SceneController;
 import org.example.libreriavirtual.utilities.Path;
