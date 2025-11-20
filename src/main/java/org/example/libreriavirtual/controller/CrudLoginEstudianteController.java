@@ -57,7 +57,7 @@ public class CrudLoginEstudianteController {
                 MostrarAlerta.info("Inicio de sesión exitoso", "¡Bienvenido/a " + user.getFull_name() + "!");
 
                 // Cambiar a la escena del panel principal
-                sceneController.cambiarEscena(event, Path.PANEL_PROFESOR_FXML);
+                sceneController.cambiarEscena(event, Path.PANEL_ESTUDIANTES_FXML);
             } else {
                 // Mostrar una alerta de error si el inicio de sesión falla
                 MostrarAlerta.error("Error de inicio de sesión", "Credenciales inválidas. Por favor, inténtalo de nuevo.");

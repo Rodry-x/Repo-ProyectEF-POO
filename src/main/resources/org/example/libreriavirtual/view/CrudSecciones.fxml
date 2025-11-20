@@ -86,5 +86,6 @@
          </font>
       </Label>
       <Label fx:id="lblContraseniaEstudianteNew" layoutX="168.0" layoutY="442.0" text="Cambiar_label_contraseña" />
+      <Button layoutX="284.0" layoutY="467.0" mnemonicParsing="false" onAction="#copiarCorreoYContraseniaDeAlumno" prefHeight="32.0" prefWidth="78.0" text="Copiar" />
    </children>
 </AnchorPane>
