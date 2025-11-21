@@ -6,6 +6,8 @@ import okhttp3.Response;
 import org.example.libreriavirtual.model.User;
 import org.example.libreriavirtual.service.ApiClient;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
@@ -50,6 +52,15 @@ public class SesionController {
         }
     }
 
+    // Nuevo: cerrar sesión del estudiante activo
+    public static void cerrarSesionEstudiante() {
+        if (currentEstudianteId != null) {
+            activeUsers.remove(currentEstudianteId);
+            currentEstudianteId = null;
+            persistirSesion();
+        }
+    }
+
     public static Integer getProfesorIdActivo() {
         return currentProfesorId;
     }
@@ -61,6 +72,11 @@ public class SesionController {
 
     public static User getProfesorActivo() {
         return getUsuarioActivo(currentProfesorId);
+    }
+
+    // Nuevo: obtener el usuario estudiante actualmente activo
+    public static User getEstudianteActivo() {
+        return getUsuarioActivo(currentEstudianteId);
     }
 
     public static boolean persistirSesion() {
@@ -170,5 +186,71 @@ public class SesionController {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public static Integer getEstudianteIdActivo() {
+        return currentEstudianteId;
+    }
+
+    // Devuelve el usuario actualmente activo (prioriza estudiante, luego profesor)
+    public static User getUsuarioActual() {
+        if (currentEstudianteId != null) return getUsuarioActivo(currentEstudianteId);
+        if (currentProfesorId != null) return getUsuarioActivo(currentProfesorId);
+        return null;
+    }
+
+    // Intenta extraer un entero representando el id de grado del usuario activo
+    public static Integer getGradeIdActivo() {
+        User u = getUsuarioActual();
+        return extractIntFromUser(u,
+                new String[]{"getGradeId", "getGrade_id", "getGrade", "getGradeIdCached", "getGradeIdValue"},
+                new String[]{"gradeId", "grade_id", "grade"});
+    }
+
+    // Intenta extraer un entero representando el id de sección del usuario activo
+    public static Integer getSectionIdActivo() {
+        User u = getUsuarioActual();
+        return extractIntFromUser(u,
+                new String[]{"getSectionId", "getSection_id", "getSection", "getSectionIdCached", "getSectionIdValue"},
+                new String[]{"sectionId", "section_id", "section"});
+    }
+
+    // Helper que usa reflexión para soportar distintas convenciones de nombres en User
+    private static Integer extractIntFromUser(User u, String[] methodNames, String[] fieldNames) {
+        if (u == null) return null;
+        try {
+            Class<?> cls = u.getClass();
+            for (String mName : methodNames) {
+                try {
+                    Method m = cls.getMethod(mName);
+                    Object val = m.invoke(u);
+                    Integer parsed = convertToInteger(val);
+                    if (parsed != null) return parsed;
+                } catch (NoSuchMethodException ignored) {
+                }
+            }
+            for (String fName : fieldNames) {
+                try {
+                    Field f = cls.getDeclaredField(fName);
+                    f.setAccessible(true);
+                    Object val = f.get(u);
+                    Integer parsed = convertToInteger(val);
+                    if (parsed != null) return parsed;
+                } catch (NoSuchFieldException ignored) {
+                }
+            }
+        } catch (Exception ex) {
+            // no hacer nada, devolver null
+        }
+        return null;
+    }
+
+    private static Integer convertToInteger(Object val) {
+        if (val == null) return null;
+        if (val instanceof Number) return ((Number) val).intValue();
+        if (val instanceof String) {
+            try { return Integer.parseInt(((String) val).trim()); } catch (Exception ignored) {}
+        }
+        return null;
     }
 }
