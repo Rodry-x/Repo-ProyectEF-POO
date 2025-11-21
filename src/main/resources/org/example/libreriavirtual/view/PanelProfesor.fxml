@@ -33,16 +33,6 @@
                   </VBox>
                   <VBox prefHeight="200.0" prefWidth="100.0">
                      <children>
-                        <Label text="Libros" />
-                        <ImageView fitHeight="119.0" fitWidth="107.0" pickOnBounds="true" preserveRatio="true">
-                           <image>
-                              <Image url="@../image/iconoLibro.png" />
-                           </image>
-                        </ImageView>
-                     </children>
-                  </VBox>
-                  <VBox prefHeight="200.0" prefWidth="100.0">
-                     <children>
                         <Label prefHeight="18.0" prefWidth="101.0" text="Configuración" />
                         <ImageView fitHeight="118.0" fitWidth="99.0" onMouseClicked="#cambiarAPanelConfiguracion" pickOnBounds="true" preserveRatio="true">
                            <image>

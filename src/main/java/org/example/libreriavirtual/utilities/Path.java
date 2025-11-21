@@ -6,6 +6,7 @@ public class Path {
     public static final String PANEL_PRINCIPAL_FXML = "/org/example/libreriavirtual/view/BienvenidaLibreriaVirtual.fxml";
     public static final String PANEL_ESTANTERIA_FXML = "/org/example/libreriavirtual/view/EstanteriaVirtual.fxml";
     public static final String PANEL_LIBROS_FXML = "/org/example/libreriavirtual/view/CrudLibros.fxml";
+    public static final String PANEL_AGREGAR_LIBROS_FXML = "/org/example/libreriavirtual/view/CrudAgregarLibros.fxml";
 
     //Path para Profesor
     public static final String PANEL_PROFESOR_FXML = "/org/example/libreriavirtual/view/PanelProfesor.fxml";

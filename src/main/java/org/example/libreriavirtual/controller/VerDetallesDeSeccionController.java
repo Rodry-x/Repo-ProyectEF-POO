@@ -50,6 +50,11 @@ public class VerDetallesDeSeccionController implements Initializable {
     }
 
     @FXML
+    void cambiarAlPanelAgregarLibros(ActionEvent event) {
+        sceneController.cambiarEscena(event, Path.PANEL_AGREGAR_LIBROS_FXML);
+    }
+
+    @FXML
     void eliminarAlumno(ActionEvent event) {
         int idx = lstAlumnos.getSelectionModel().getSelectedIndex();
         if (idx < 0) {
