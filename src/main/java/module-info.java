@@ -14,6 +14,7 @@ module org.example.libreriavirtual {
     requires java.sql;
     requires com.google.gson;
     requires okhttp3;
+    requires javafx.base;
 
     exports org.example.libreriavirtual.application;
     opens org.example.libreriavirtual.application to javafx.fxml;

@@ -15,6 +15,7 @@ public class Path {
     public static final String PANEL_CAMBIAR_CONTRASENIA_PROFESOR_FXML = "/org/example/libreriavirtual/view/CrudCambiarContraseniaProfesor.fxml";
     public static final String PANEL_AULA_FXML = "/org/example/libreriavirtual/view/PanelAula.fxml";
     public static final String PANEL_SECCIONES_FXML = "/org/example/libreriavirtual/view/CrudSecciones.fxml";
+    public static final String PANEL_VER_DETALLES_SECCION_FXML = "/org/example/libreriavirtual/view/VerDetallesDeSeccion.fxml";
 
     //Path para Estudiantes
     public static final String PANEL_ESTUDIANTES_FXML = "/org/example/libreriavirtual/view/PanelEstudiante.fxml";

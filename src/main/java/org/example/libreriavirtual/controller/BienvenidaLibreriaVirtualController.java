@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.example.libreriavirtual.model.PostLogin;
+import org.example.libreriavirtual.model.PostUser;
 import org.example.libreriavirtual.model.User;
 import org.example.libreriavirtual.utilities.Path;
 import org.example.libreriavirtual.utilities.SceneController;
@@ -30,10 +31,10 @@ public class BienvenidaLibreriaVirtualController {
     @FXML
     void probarRequest(ActionEvent event) {
 
-            PostLogin body = new PostLogin("ana.docente@example.com", "secreto123");
+            PostUser body = new PostUser("Docente Prueba", "prueba@example.com", "123456789", "teacher");
             String jsonBody = gson.toJson(body);
 
-            try (var response = ApiClient.request("/auth/login", "POST", jsonBody)) {
+            try (var response = ApiClient.request("/users", "POST", jsonBody)) {
 
                 String responseBody = response.body().string();
 

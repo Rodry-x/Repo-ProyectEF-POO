@@ -8,9 +8,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import org.example.libreriavirtual.model.*;
 import org.example.libreriavirtual.service.ApiClient;
-import org.example.libreriavirtual.utilities.LimpiarCasillasController;
-import org.example.libreriavirtual.utilities.SceneController;
-import org.example.libreriavirtual.utilities.Path;
+import org.example.libreriavirtual.utilities.*;
 import com.google.gson.Gson;
 
 import java.util.Arrays;
@@ -79,12 +77,12 @@ public class CrudSeccionesController {
         // validar sección seleccionada
         String selectedSectionName = cmbSeccion.getValue();
         if (selectedSectionName == null || selectedSectionName.isBlank()) {
-            System.err.println("Seleccione una sección antes de matricular al estudiante.");
+            MostrarAlerta.error("Validación", "Seleccione una sección antes de matricular al estudiante.");
             return;
         }
         Integer sectionId = sectionIds.get(selectedSectionName);
         if (sectionId == null) {
-            System.err.println("No se pudo resolver el id de la sección seleccionada.");
+            MostrarAlerta.error("Validación", "No se pudo resolver el id de la sección seleccionada.");
             return;
         }
         //Generar email y contraseña automáticamente
@@ -94,8 +92,8 @@ public class CrudSeccionesController {
         String fullName = (nombre + " " + apellidos).trim();
 
         // generar email y contraseña aquí mismo
-        String email = buildEmailFromName(nombre, apellidos);
-        String password = generateRandomPassword(10); // asegura > 8 caracteres
+        String email = CredentialUtils.buildEmailFromName(nombre, apellidos);
+        String password = CredentialUtils.generateRandomPassword(10);
 
         // actualizar labels en la UI
         lblCorreoEstudianteNew.setText(email);
@@ -104,51 +102,19 @@ public class CrudSeccionesController {
         PostStudent postStudent = new PostStudent(fullName, email, "student", password);
         String jsonBody = gson.toJson(postStudent);
 
-        try (var response = ApiClient.request("/users", "POST", jsonBody)) {
-            String responseBody = response.body().string();
-            System.out.println("User Response code: " + response.code());
-            System.out.println("User Response body: " + responseBody);
+        try {
+            // usar ApiUtils para crear y obtener id del estudiante
+            Integer studentId = ApiUtils.postAndExtractId("/users", jsonBody);
 
-            Integer studentId = null;
-
-            // intentar obtener id desde el body (JSON)
-            if (response.isSuccessful() && responseBody != null && !responseBody.isBlank()) {
-                try {
-                    StudentResponse created = gson.fromJson(responseBody, StudentResponse.class);
-                    studentId = created != null ? created.getId() : null;
-                } catch (Exception ignored) {
-                }
-            }
-
-            // fallback a header Location si no hay body con id
-            if (studentId == null) {
-                String loc = response.header("Location");
-                if (loc != null && !loc.isBlank()) {
-                    String[] parts = loc.split("/");
-                    String last = parts[parts.length - 1];
-                    try {
-                        studentId = Integer.valueOf(last);
-                    } catch (NumberFormatException ignored) {
-                    }
-                }
-            }
-
-            if (studentId == null) {
-                System.err.println("No se pudo obtener el id del estudiante creado. Revisar la respuesta del servidor.");
-                return;
-            }
-
-            // matricular estudiante en la sección
             Map<String, Integer> enrollBody = Map.of("student_id", studentId);
             String enrollJson = gson.toJson(enrollBody);
-            String enrollPath = "/sections/" + sectionId + "/students";
+            String enrollPath = "/sections/" + sectionId + "/enroll";
 
             try (var resp2 = ApiClient.request(enrollPath, "POST", enrollJson)) {
-                String enrollRespBody = resp2.body().string();
+                String enrollRespBody = resp2.body() != null ? resp2.body().string() : "";
                 System.out.println("Enroll Response code: " + resp2.code());
                 System.out.println("Enroll Response body: " + enrollRespBody);
 
-                // actualizar UI: recargar secciones del grado seleccionado (opcional)
                 String selectedGrade = cmbGrado.getValue();
                 if (selectedGrade != null) {
                     Integer gradeId = gradeIds.get(selectedGrade);
@@ -158,71 +124,34 @@ public class CrudSeccionesController {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                MostrarAlerta.error("Error", "Fallo al matricular al estudiante: " + e.getMessage());
             }
 
         } catch (Exception e) {
             e.printStackTrace();
+            MostrarAlerta.error("Error", "Fallo al crear el estudiante: " + e.getMessage());
         }
     }
 
     @FXML
     void enviarLosDatosSeccion(ActionEvent event) {
-        PostGrade body = new PostGrade(txtGrado.getText());
-        String jsonBody = gson.toJson(body);
+        try {
+            // crear grado y obtener id usando ApiUtils
+            PostGrade body = new PostGrade(txtGrado.getText());
+            String jsonBody = gson.toJson(body);
+            Integer gradeId = ApiUtils.postAndExtractId("/grades", jsonBody);
 
-        try (var response = ApiClient.request("/grades", "POST", jsonBody)) {
-            String responseBody = response.body().string();
-
-            System.out.println("Response code: " + response.code());
-            System.out.println("Response body: " + responseBody);
-
-            Integer gradeId = null;
-
-            // Intentar leer id desde el body (JSON) si el backend lo devuelve
-            if (response.isSuccessful() && responseBody != null && !responseBody.isBlank()) {
-                try {
-                    GradeResponse created = gson.fromJson(responseBody, GradeResponse.class);
-                    gradeId = created != null ? created.getId() : null;
-                } catch (Exception e) {
-                    // ignore parsing error y fallback a Location header
-                }
-            }
-
-            // Si no hay body con id, intentar leer header Location
-            if (gradeId == null) {
-                String loc = response.header("Location");
-                if (loc != null && !loc.isBlank()) {
-                    String[] parts = loc.split("/");
-                    String last = parts[parts.length - 1];
-                    try {
-                        gradeId = Integer.valueOf(last);
-                    } catch (NumberFormatException ignored) {
-                    }
-                }
-            }
-
-            if (gradeId == null) {
-                System.err.println("No se pudo obtener el id del grado creado. Revisar la respuesta del servidor.");
-                return;
-            }
-
-            // Ahora crear la sección usando el id obtenido
+            // crear sección usando ApiUtils (si la API devuelve id, lo recibimos; si no, adaptar)
             PostSecciones bodySeccion = new PostSecciones(txtSeccion.getText());
             String jsonBodySeccion = gson.toJson(bodySeccion);
+            Integer sectionCreatedId = ApiUtils.postAndExtractId("/grades/" + gradeId + "/sections", jsonBodySeccion);
 
-            String path = "/grades/" + gradeId + "/sections"; // ajustar si la API usa otra ruta
-            try (var resp2 = ApiClient.request(path, "POST", jsonBodySeccion)) {
-                String responseBody2 = resp2.body().string();
-                System.out.println("Section Response code: " + resp2.code());
-                System.out.println("Section Response body: " + responseBody2);
-                // Para actualizar la vista, recargar la escena de secciones
-                sceneController.cambiarEscena(event, Path.PANEL_SECCIONES_FXML);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            // Si necesitas usar el id de la sección creada, sectionCreatedId lo contiene.
+            sceneController.cambiarEscena(event, Path.PANEL_SECCIONES_FXML);
 
         } catch (Exception e) {
             e.printStackTrace();
+            MostrarAlerta.error("Error", "Fallo al crear grado/sección: " + e.getMessage());
         }
     }
 
@@ -240,10 +169,8 @@ public class CrudSeccionesController {
     // Cargar todos los grados desde la API y rellenar cmbGrado
     private void cargarGrados() {
         new Thread(() -> {
-            try (var response = ApiClient.request("/grades", "GET", null)) {
-                if (!response.isSuccessful()) return;
-                String body = response.body().string();
-                GradeResponse[] grades = gson.fromJson(body, GradeResponse[].class);
+            try {
+                GradeResponse[] grades = ApiUtils.getArray("/grades", GradeResponse[].class);
                 Platform.runLater(() -> {
                     gradeIds.clear();
                     cmbGrado.getItems().clear();
@@ -259,6 +186,7 @@ public class CrudSeccionesController {
                 });
             } catch (Exception e) {
                 e.printStackTrace();
+                MostrarAlerta.advertencia("Error", "No se pudieron cargar los grados: " + e.getMessage());
             }
         }).start();
     }
@@ -266,10 +194,8 @@ public class CrudSeccionesController {
     // Cargar secciones de un grado y rellenar cmbSeccion
     private void cargarSeccionesPorGrado(int gradeId) {
         new Thread(() -> {
-            try (var response = ApiClient.request("/grades/" + gradeId + "/sections", "GET", null)) {
-                if (!response.isSuccessful()) return;
-                String body = response.body().string();
-                SectionResponse[] sections = gson.fromJson(body, SectionResponse[].class);
+            try {
+                SectionResponse[] sections = ApiUtils.getArray("/grades/" + gradeId + "/sections", SectionResponse[].class);
                 Platform.runLater(() -> {
                     sectionIds.clear();
                     cmbSeccion.getItems().clear();
@@ -285,60 +211,9 @@ public class CrudSeccionesController {
                 });
             } catch (Exception e) {
                 e.printStackTrace();
+                MostrarAlerta.advertencia("Error", "No se pudieron cargar las secciones: " + e.getMessage());
             }
         }).start();
-    }
-
-    // Construye un email a partir de nombre y apellidos.
-    // Normaliza a minúsculas, espacios por puntos y elimina caracteres inválidos.
-    private String buildEmailFromName(String nombre, String apellidos) {
-        String combined = (nombre + " " + apellidos).trim();
-        if (combined.isEmpty()) {
-            // fallback si no hay datos
-            return "user" + System.currentTimeMillis() % 10000 + "@libreria.pe";
-        }
-        String sanitized = combined.toLowerCase(java.util.Locale.ROOT)
-                .replaceAll("\\s+", ".")           // espacios -> puntos
-                .replaceAll("[^a-z0-9.]", "");    // quitar caracteres no alfanum ni punto
-        // evitar empezar o terminar con punto
-        sanitized = sanitized.replaceAll("^\\.+|\\.+$", "");
-        if (sanitized.isEmpty()) {
-            return "user" + System.currentTimeMillis() % 10000 + "@libreria.pe";
-        }
-        return sanitized + "@libreria.pe";
-    }
-
-    // Genera una contraseña aleatoria con longitud mínima > 8.
-    // Usa SecureRandom y un conjunto seguro de caracteres.
-    private String generateRandomPassword(int length) {
-        int minLength = Math.max(9, length);
-        final String upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        final String lower = "abcdefghijklmnopqrstuvwxyz";
-        final String digits = "0123456789";
-        final String symbols = "!@#$%&*()-_=+";
-        final String all = upper + lower + digits + symbols;
-
-        java.security.SecureRandom rnd = new java.security.SecureRandom();
-        StringBuilder sb = new StringBuilder(minLength);
-
-        // asegurar que haya al menos una mayúscula, una minúscula y un dígito
-        sb.append(upper.charAt(rnd.nextInt(upper.length())));
-        sb.append(lower.charAt(rnd.nextInt(lower.length())));
-        sb.append(digits.charAt(rnd.nextInt(digits.length())));
-
-        for (int i = 3; i < minLength; i++) {
-            sb.append(all.charAt(rnd.nextInt(all.length())));
-        }
-
-        // barajar los caracteres para no colocar las obligatorias al inicio
-        char[] pwd = sb.toString().toCharArray();
-        for (int i = pwd.length - 1; i > 0; i--) {
-            int j = rnd.nextInt(i + 1);
-            char tmp = pwd[i];
-            pwd[i] = pwd[j];
-            pwd[j] = tmp;
-        }
-        return new String(pwd);
     }
 
     @FXML
@@ -360,5 +235,4 @@ public class CrudSeccionesController {
 
         System.out.println("Datos copiados al portapapeles.");
     }
-
 }

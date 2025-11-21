@@ -35,7 +35,7 @@
                         </Label>
                      </children>
                   </HBox>
-                  <HBox onMouseClicked="#cambiarAlPanelLoginProfesor" prefHeight="83.0" prefWidth="246.0">
+                  <HBox onMouseClicked="#CerrarSesionProfesor" prefHeight="83.0" prefWidth="246.0">
                      <children>
                         <ImageView fitHeight="103.0" fitWidth="85.0" pickOnBounds="true" preserveRatio="true">
                            <image>

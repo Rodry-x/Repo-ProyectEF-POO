@@ -22,9 +22,13 @@ public class CrudConfiguracionProfesorController {
     }
 
     @FXML
-    void cambiarAlPanelLoginProfesor(MouseEvent event) {
-        MostrarAlerta.info("Sesión cerrada", "La sesión se ha cerrado correctamente.");
+    void CerrarSesionProfesor(MouseEvent event) {
+        // Limpiar sesión en memoria y en disco
         SesionController.cerrarSesionProfesor();
+        SesionController.borrarSesionPersistida();
+
+        // Informar al usuario y volver al login
+        MostrarAlerta.info("Sesión cerrada", "La sesión se ha cerrado correctamente.");
         sceneController.cambiarEscena(event, Path.PANEL_LOGIN_PROFESOR_FXML);
     }
 

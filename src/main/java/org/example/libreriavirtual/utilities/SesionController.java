@@ -1,4 +1,3 @@
-// java
 package org.example.libreriavirtual.utilities;
 
 import com.google.gson.Gson;
@@ -7,42 +6,42 @@ import okhttp3.Response;
 import org.example.libreriavirtual.model.User;
 import org.example.libreriavirtual.service.ApiClient;
 
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
-import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 public class SesionController {
-    private static final Map<Integer, User> activeUsers = new ConcurrentHashMap<>();
-    private static final Path SESSION_FILE = Paths.get(System.getProperty("user.home"), ".libreria_session.json");
+    private static final java.util.Map<Integer, User> activeUsers = new ConcurrentHashMap<>();
+    private static final java.nio.file.Path SESSION_FILE = java.nio.file.Paths.get(System.getProperty("user.home"), ".libreria_session.json");
     private static final Gson gson = new Gson();
 
-    // Ids actualmente logueadas (persistidas en disco)
     private static volatile Integer currentProfesorId = null;
     private static volatile Integer currentEstudianteId = null;
 
-    // Iniciar/registrar sesión (añade al mapa y marca según rol)
     public static void iniciarSesion(User user) {
         if (user == null) return;
-        activeUsers.put(user.getId(), user);
+        int id = user.getId();
+        if (id <= 0) return;
 
-        if (user.getRole() != null) {
-            if (user.getRole().equalsIgnoreCase("profesor")) {
-                currentProfesorId = user.getId();
-                persistirSesion();
-            } else if (user.getRole().equalsIgnoreCase("estudiante")) {
-                currentEstudianteId = user.getId();
-                persistirSesion();
+        activeUsers.put(id, user);
+
+        String role = user.getRole();
+        if (role != null) {
+            String r = role.trim().toLowerCase();
+            if (r.equals("profesor") || r.equals("teacher")) {
+                currentProfesorId = id;
+            } else if (r.equals("estudiante") || r.equals("student")) {
+                currentEstudianteId = id;
             }
         }
+
+        boolean ok = persistirSesion();
+        System.out.println("[SesionController] iniciarSesion -> id: " + id + ", role: " + role + ", persistirOk: " + ok);
     }
 
-    // Cerrar sesión del profesor actual
     public static void cerrarSesionProfesor() {
         if (currentProfesorId != null) {
             activeUsers.remove(currentProfesorId);
@@ -51,125 +50,125 @@ public class SesionController {
         }
     }
 
-    // Cerrar sesión del estudiante actual
-    public static void cerrarSesionEstudiante() {
-        if (currentEstudianteId != null) {
-            activeUsers.remove(currentEstudianteId);
-            currentEstudianteId = null;
-            persistirSesion();
-        }
-    }
-
-    // Obtener ids activas (pueden ser null)
     public static Integer getProfesorIdActivo() {
         return currentProfesorId;
     }
 
-    public static Integer getEstudianteIdActivo() {
-        return currentEstudianteId;
-    }
-
-    // Obtener usuario activo por id (o null)
-    public static User getUsuarioActivo(int id) {
+    public static User getUsuarioActivo(Integer id) {
+        if (id == null) return null;
         return activeUsers.get(id);
     }
 
-    // Resto de utilidades (listas por rol)
-    public static List<User> getEstudiantesActivos() {
-        return activeUsers.values()
-                .stream()
-                .filter(u -> u.getRole() != null && u.getRole().equalsIgnoreCase("estudiante"))
-                .collect(Collectors.toList());
+    public static User getProfesorActivo() {
+        return getUsuarioActivo(currentProfesorId);
     }
 
-    public static List<User> getProfesoresActivos() {
-        return activeUsers.values()
-                .stream()
-                .filter(u -> u.getRole() != null && u.getRole().equalsIgnoreCase("profesor"))
-                .collect(Collectors.toList());
-    }
-
-    public static List<User> getTodosActivos() {
-        return activeUsers.values().stream().collect(Collectors.toList());
-    }
-
-    // Persistir las ids a disco
-    private static void persistirSesion() {
+    public static boolean persistirSesion() {
         try {
-            String json = gson.toJson(Map.of(
-                    "currentProfesorId", currentProfesorId,
-                    "currentEstudianteId", currentEstudianteId
-            ));
+            java.nio.file.Path parent = SESSION_FILE.getParent();
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
+            java.util.Map<String, Integer> data = new java.util.HashMap<>();
+            data.put("currentProfesorId", currentProfesorId);
+            data.put("currentEstudianteId", currentEstudianteId);
+
+            String json = gson.toJson(data);
             Files.writeString(SESSION_FILE, json, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        } catch (IOException e) {
+
+            boolean exists = Files.exists(SESSION_FILE);
+            System.out.println("[SesionController] Sesión persistida en: " + SESSION_FILE + " -> " + json + " (exists=" + exists + ")");
+            return exists;
+        } catch (Exception e) {
+            System.err.println("[SesionController] Error al persistir sesión: " + e.getMessage());
             e.printStackTrace();
+            return false;
         }
     }
 
-    // Borrar archivo de sesión
-    private static void borrarSesionPersistida() {
+    public static void borrarSesionPersistida() {
         try {
             Files.deleteIfExists(SESSION_FILE);
-        } catch (IOException e) {
+            System.out.println("[SesionController] Archivo de sesión borrado: " + SESSION_FILE);
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    // Cargar sesión persistida (llamar al inicio de la aplicación)
     public static void cargarSesionPersistida() {
-        if (Files.exists(SESSION_FILE)) {
-            try {
-                String json = Files.readString(SESSION_FILE, StandardCharsets.UTF_8);
-                Type type = new TypeToken<Map<String, Integer>>() {}.getType();
-                Map<String, Integer> m = gson.fromJson(json, type);
-                Integer pid = m != null ? m.get("currentProfesorId") : null;
-                Integer epid = m != null ? m.get("currentEstudianteId") : null;
-
-                if (pid != null) {
-                    currentProfesorId = pid;
-                    sincronizarProfesorDesdeApi(pid);
-                }
-                if (epid != null) {
-                    currentEstudianteId = epid;
-                    sincronizarEstudianteDesdeApi(epid);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+        try {
+            if (!Files.exists(SESSION_FILE)) {
+                System.out.println("[SesionController] No existe archivo de sesión en: " + SESSION_FILE);
+                return;
             }
-        }
-    }
-
-    // Sincroniza los datos del profesor guardado consultando /users y buscando por id
-    private static void sincronizarProfesorDesdeApi(int id) {
-        try (Response response = ApiClient.request("/users", "GET", null)) {
-            if (response.isSuccessful() && response.body() != null) {
-                String json = response.body().string();
-                Type listType = new TypeToken<List<User>>() {}.getType();
-                List<User> usuarios = gson.fromJson(json, listType);
-                usuarios.stream()
-                        .filter(u -> u.getId() == id)
-                        .findFirst()
-                        .ifPresent(u -> activeUsers.put(id, u));
+            String json = Files.readString(SESSION_FILE, StandardCharsets.UTF_8);
+            System.out.println("[SesionController] Leyendo sesión: " + json);
+            Type type = new TypeToken<java.util.Map<String, Integer>>() {}.getType();
+            java.util.Map<String, Integer> m = gson.fromJson(json, type);
+            Integer pid = m != null ? m.get("currentProfesorId") : null;
+            Integer epid = m != null ? m.get("currentEstudianteId") : null;
+            if (pid != null) {
+                currentProfesorId = pid;
+                sincronizarProfesor(pid);
+            }
+            if (epid != null) {
+                currentEstudianteId = epid;
+                sincronizarEstudiante(epid);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    // Sincroniza los datos del estudiante guardado consultando /users y buscando por id
-    private static void sincronizarEstudianteDesdeApi(int id) {
+    public static void sincronizarProfesor(int id) {
         try (Response response = ApiClient.request("/users", "GET", null)) {
-            if (response.isSuccessful() && response.body() != null) {
+            if (response != null && response.isSuccessful() && response.body() != null) {
                 String json = response.body().string();
                 Type listType = new TypeToken<List<User>>() {}.getType();
                 List<User> usuarios = gson.fromJson(json, listType);
                 usuarios.stream()
-                        .filter(u -> u.getId() == id)
+                        .filter(u -> Objects.equals(u.getId(), id))
                         .findFirst()
-                        .ifPresent(u -> activeUsers.put(id, u));
+                        .ifPresent(u -> {
+                            activeUsers.put(id, u);
+                            System.out.println("[SesionController] Profesor sincronizado desde API: " + u.getEmail());
+                        });
+            } else {
+                System.out.println("[SesionController] Falló request /users al sincronizar profesor (response null o no exitoso).");
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public static void sincronizarEstudiante(int id) {
+        try (Response response = ApiClient.request("/users", "GET", null)) {
+            if (response != null && response.isSuccessful() && response.body() != null) {
+                String json = response.body().string();
+                Type listType = new TypeToken<List<User>>() {}.getType();
+                List<User> usuarios = gson.fromJson(json, listType);
+                usuarios.stream()
+                        .filter(u -> Objects.equals(u.getId(), id))
+                        .findFirst()
+                        .ifPresent(u -> activeUsers.put(id, u));
+            } else {
+                System.out.println("[SesionController] Falló request /users al sincronizar estudiante.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static java.nio.file.Path getSessionFilePath() {
+        return SESSION_FILE;
+    }
+
+    public static boolean sesionPersistidaExiste() {
+        try {
+            return Files.exists(SESSION_FILE);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
     }
 }

@@ -27,5 +27,6 @@
          </image></ImageView>
       <Button layoutX="108.0" layoutY="431.0" mnemonicParsing="false" onAction="#cambiarAPanelLoginAdmin" prefHeight="38.0" prefWidth="194.0" text="Iniciar Sesión profesor" />
       <Button layoutX="108.0" layoutY="477.0" mnemonicParsing="false" onAction="#cambiarAlPanelLoginEstudiante" prefHeight="38.0" prefWidth="194.0" text="Iniciar Sesión Alumno" />
+      <Button layoutX="33.0" layoutY="457.0" mnemonicParsing="false" onAction="#probarRequest" text="Button" />
    </children>
 </AnchorPane>

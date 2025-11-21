@@ -52,6 +52,14 @@ public class CrudLoginProfesorController {
 
                 // Iniciar sesión guardando el usuario actual
                 SesionController.iniciarSesion(user);
+
+                // Trazas de depuración: id, role y existencia del archivo de sesión
+                System.out.println("[Login] user.id = " + (user != null ? user.getId() : "null"));
+                System.out.println("[Login] user.role = " + (user != null ? user.getRole() : "null"));
+                System.out.println("[Login] Sesión persistida existe? " + SesionController.sesionPersistidaExiste());
+                System.out.println("[Login] Ruta de sesión: " + SesionController.getSessionFilePath());
+
+
                 // Mostrar una alerta de éxito
                 MostrarAlerta.info("Inicio de sesión exitoso", "¡Bienvenido/a " + user.getFull_name() + "!");
 
