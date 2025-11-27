@@ -15,8 +15,7 @@
       </Label>
       <ListView fx:id="lstSecciones" layoutX="29.0" layoutY="37.0" prefHeight="402.0" prefWidth="350.0" />
       <Button layoutX="32.0" layoutY="451.0" mnemonicParsing="false" onAction="#cambiarAlPanelProfesor" prefHeight="36.0" prefWidth="70.0" text="Atras" />
-      <Button layoutX="283.0" layoutY="493.0" mnemonicParsing="false" onAction="#verDetallesDeSecciones" prefHeight="36.0" prefWidth="98.0" text="Ver Detalles" />
-      <Button layoutX="155.0" layoutY="451.0" mnemonicParsing="false" onAction="#agregarSeccion" prefHeight="36.0" prefWidth="98.0" text="Añadir Sección" />
-      <Button layoutX="263.0" layoutY="451.0" mnemonicParsing="false" onAction="#eliminarSeccion" prefHeight="36.0" prefWidth="118.0" text="Eliminar Sección" />
+      <Button layoutX="280.0" layoutY="451.0" mnemonicParsing="false" onAction="#verDetallesDeSecciones" prefHeight="36.0" prefWidth="98.0" text="Ver Detalles" />
+      <Button layoutX="169.0" layoutY="451.0" mnemonicParsing="false" onAction="#agregarSeccion" prefHeight="36.0" prefWidth="98.0" text="Añadir Sección" />
    </children>
 </AnchorPane>

@@ -85,6 +85,7 @@ public class VerDetallesDeSeccionController implements Initializable {
                                 studentIds.remove(idx);
                             }
                             System.out.println("Alumno eliminado: id " + id);
+                            MostrarAlerta.info("Éxito", "Alumno eliminado correctamente.");
                         });
                     } else {
                         // extraer datos necesarios antes de la lambda para no capturar 'resp'

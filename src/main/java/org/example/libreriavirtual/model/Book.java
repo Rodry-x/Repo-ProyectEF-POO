@@ -1,5 +1,7 @@
 package org.example.libreriavirtual.model;
 
+import javax.annotation.processing.Generated;
+
 public class Book {
     private String title;
     private String author;

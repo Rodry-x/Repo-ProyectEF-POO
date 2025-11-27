@@ -10,6 +10,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
+import javafx.scene.input.MouseEvent;
 import okhttp3.Response;
 import org.example.libreriavirtual.service.ApiClient;
 import org.example.libreriavirtual.utilities.MostrarAlerta;
@@ -37,11 +38,6 @@ public class CrudAulaController implements Initializable {
     }
 
     @FXML
-    void eliminarSeccion(ActionEvent event) {
-
-    }
-
-    @FXML
     void cambiarAlPanelProfesor(ActionEvent event) {
         sceneController.cambiarEscena(event, Path.PANEL_PROFESOR_FXML);
     }
@@ -50,7 +46,7 @@ public class CrudAulaController implements Initializable {
     void verDetallesDeSecciones(ActionEvent event) {
         String selected = lstSecciones.getSelectionModel().getSelectedItem();
         if (selected == null || selected.isBlank()) {
-            System.err.println("Seleccione una sección en la lista primero.");
+            MostrarAlerta.error("Error", "No se ha seleccionado ninguna sección.");
             return;
         }
         // formato esperado: "GradoName - SeccionName"
@@ -60,6 +56,7 @@ public class CrudAulaController implements Initializable {
 
         if (gradeName.isEmpty() || sectionName.isEmpty()) {
             System.err.println("Elemento seleccionado con formato inesperado: " + selected);
+            MostrarAlerta.advertencia("Advertencia", "El elemento seleccionado tiene un formato inesperado.");
             return;
         }
 

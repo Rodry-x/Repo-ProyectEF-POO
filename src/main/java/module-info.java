@@ -15,6 +15,7 @@ module org.example.libreriavirtual {
     requires com.google.gson;
     requires okhttp3;
     requires javafx.base;
+    requires java.compiler;
 
     exports org.example.libreriavirtual.application;
     opens org.example.libreriavirtual.application to javafx.fxml;

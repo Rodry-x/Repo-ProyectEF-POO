@@ -30,6 +30,9 @@ public class CrudSeccionesController {
     private ComboBox<String> cmbGrado;
 
     @FXML
+    private ComboBox<String> cmbElegirGradoParaAgregarSeccion;
+
+    @FXML
     private ComboBox<String> cmbSeccion;
 
     @FXML
@@ -52,10 +55,10 @@ public class CrudSeccionesController {
 
     @FXML
     public void initialize() {
-        // cargar grados al iniciar
+        // cargar grados al iniciar (ahora llena ambos combo)
         cargarGrados();
 
-        // cuando el usuario seleccione un grado, cargar sus secciones
+        // cuando el usuario seleccione un grado en el panel de matriculación, cargar sus secciones
         cmbGrado.setOnAction(event -> {
             String selected = cmbGrado.getValue();
             Integer id = gradeIds.get(selected);
@@ -134,25 +137,72 @@ public class CrudSeccionesController {
     }
 
     @FXML
-    void enviarLosDatosSeccion(ActionEvent event) {
-        try {
-            // crear grado y obtener id usando ApiUtils
-            PostGrade body = new PostGrade(txtGrado.getText());
-            String jsonBody = gson.toJson(body);
-            Integer gradeId = ApiUtils.postAndExtractId("/grades", jsonBody);
-
-            // crear sección usando ApiUtils (si la API devuelve id, lo recibimos; si no, adaptar)
-            PostSecciones bodySeccion = new PostSecciones(txtSeccion.getText());
-            String jsonBodySeccion = gson.toJson(bodySeccion);
-            Integer sectionCreatedId = ApiUtils.postAndExtractId("/grades/" + gradeId + "/sections", jsonBodySeccion);
-
-            // Si necesitas usar el id de la sección creada, sectionCreatedId lo contiene.
-            sceneController.cambiarEscena(event, Path.PANEL_SECCIONES_FXML);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            MostrarAlerta.error("Error", "Fallo al crear grado/sección: " + e.getMessage());
+    void guardarGrado(ActionEvent event) {
+        String nombreGrado = txtGrado.getText() != null ? txtGrado.getText().trim() : "";
+        if (nombreGrado.isBlank()) {
+            MostrarAlerta.error("Validación", "Ingrese el nombre del grado.");
+            return;
         }
+
+        new Thread(() -> {
+            try {
+                PostGrade body = new PostGrade(nombreGrado);
+                String jsonBody = gson.toJson(body);
+                Integer gradeId = ApiUtils.postAndExtractId("/grades", jsonBody);
+
+                Platform.runLater(() -> {
+                    txtGrado.clear();
+                    // recargar grados en ambos combo
+                    cargarGrados();
+                    MostrarAlerta.info("Éxito", "Grado creado correctamente (id: " + gradeId + ").");
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+                Platform.runLater(() -> MostrarAlerta.error("Error", "Fallo al crear el grado: " + e.getMessage()));
+            }
+        }).start();
+    }
+
+    @FXML
+    void guardarSeccion(ActionEvent event) {
+        String selectedGradeName = cmbElegirGradoParaAgregarSeccion.getValue();
+        if (selectedGradeName == null || selectedGradeName.isBlank()) {
+            MostrarAlerta.error("Validación", "Seleccione un grado donde agregar la sección.");
+            return;
+        }
+        Integer gradeId = gradeIds.get(selectedGradeName);
+        if (gradeId == null) {
+            MostrarAlerta.error("Validación", "No se pudo resolver el id del grado seleccionado.");
+            return;
+        }
+
+        String nombreSeccion = txtSeccion.getText() != null ? txtSeccion.getText().trim() : "";
+        if (nombreSeccion.isBlank()) {
+            MostrarAlerta.error("Validación", "Ingrese el nombre de la sección.");
+            return;
+        }
+
+        new Thread(() -> {
+            try {
+                PostSecciones bodySeccion = new PostSecciones(nombreSeccion);
+                String jsonBodySeccion = gson.toJson(bodySeccion);
+                Integer sectionCreatedId = ApiUtils.postAndExtractId("/grades/" + gradeId + "/sections", jsonBodySeccion);
+
+                Platform.runLater(() -> {
+                    txtSeccion.clear();
+                    // si el grado seleccionado en la parte de matriculación coincide, recargar sus secciones
+                    String currentMatriculaGrade = cmbGrado.getValue();
+                    if (currentMatriculaGrade != null && gradeIds.get(currentMatriculaGrade) != null
+                            && gradeIds.get(currentMatriculaGrade).equals(gradeId)) {
+                        cargarSeccionesPorGrado(gradeId);
+                    }
+                    MostrarAlerta.info("Éxito", "Sección creada correctamente (id: " + sectionCreatedId + ").");
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+                Platform.runLater(() -> MostrarAlerta.error("Error", "Fallo al crear la sección: " + e.getMessage()));
+            }
+        }).start();
     }
 
     @FXML
@@ -166,7 +216,7 @@ public class CrudSeccionesController {
         LimpiarCasillasController.limpiarTextField(txtGrado, txtSeccion);
     }
 
-    // Cargar todos los grados desde la API y rellenar cmbGrado
+    // Cargar todos los grados desde la API y rellenar cmbGrado y cmbElegirGradoParaAgregarSeccion
     private void cargarGrados() {
         new Thread(() -> {
             try {
@@ -174,12 +224,14 @@ public class CrudSeccionesController {
                 Platform.runLater(() -> {
                     gradeIds.clear();
                     cmbGrado.getItems().clear();
+                    cmbElegirGradoParaAgregarSeccion.getItems().clear();
                     if (grades != null) {
                         Arrays.stream(grades).forEach(g -> {
                             String name = g.getName();
                             if (name != null) {
                                 gradeIds.put(name, g.getId());
                                 cmbGrado.getItems().add(name);
+                                cmbElegirGradoParaAgregarSeccion.getItems().add(name);
                             }
                         });
                     }

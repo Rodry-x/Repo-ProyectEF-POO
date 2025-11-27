@@ -31,7 +31,7 @@ public class BienvenidaLibreriaVirtualController {
     @FXML
     void probarRequest(ActionEvent event) {
 
-            PostUser body = new PostUser("Docente Prueba", "prueba@example.com", "123456789", "teacher");
+            PostUser body = new PostUser("Miranda Charlotte Flores Vásquez", "miranda.vasquez@gmail.com", "contra123", "teacher");
             String jsonBody = gson.toJson(body);
 
             try (var response = ApiClient.request("/users", "POST", jsonBody)) {
